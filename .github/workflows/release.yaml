@@ -37,10 +37,13 @@ jobs:
             exit 1
           fi
 
-      - name: Check and build
+      - name: Check and test
         run: |
           pnpm check
-          pnpm build
+          pnpm test
+
+      - name: Build
+        run: pnpm build
 
       - name: Create or sync release
         env:
