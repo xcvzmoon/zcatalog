@@ -49,7 +49,7 @@ pnpm build
 pnpm start
 ```
 
-Regular tests cover token overlap, extraction of the 657-page biology book in `public/assets`, Zvec ranking, filtering, repeat writes, and reopening persisted data. The opt-in semantic test downloads the embedding model, indexes the complete book twice to verify distinct UUID v7 IDs, and retrieves cited passages about photosynthesis. It can take several minutes. The book is read directly from disk for testing.
+Regular tests cover token overlap, extraction of the 42-page Filipino cookbook in `public/assets`, Zvec ranking, filtering, repeat writes, and reopening persisted data. The opt-in semantic test downloads the embedding model, indexes the complete book twice to verify distinct UUID v7 IDs, and retrieves cited recipe passages. It can take several minutes. The book is read directly from disk for testing.
 
 ## Deployment
 

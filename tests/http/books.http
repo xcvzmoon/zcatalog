@@ -5,7 +5,7 @@
 GET {{baseUrl}}/api
 Accept: application/json
 
-### Upload biology book — expected 201; run before the filtered search
+### Upload Filipino cookbook — expected 201; run before the filtered search
 # @name uploadBook
 POST {{baseUrl}}/api/books
 Content-Type: multipart/form-data; boundary=BookUploadBoundary
@@ -14,12 +14,12 @@ Accept: application/json
 --BookUploadBoundary
 Content-Disposition: form-data; name="title"
 
-Biology for Life: A Guide to Our Living World
+Quick and Easy Filipino Cookbook
 --BookUploadBoundary
-Content-Disposition: form-data; name="file"; filename="biology-for-life.pdf"
+Content-Disposition: form-data; name="file"; filename="filipino-cookbook.pdf"
 Content-Type: application/pdf
 
-< ../../public/assets/Biology for Life A Guide to Our Living World (Melanie Peffer).pdf
+< ../../public/assets/Quick and Easy Filipino Cookbook - Quick and easy to prepare at home recipes, step by step guide to the classic Filipino… (Scott Wilson).pdf
 --BookUploadBoundary--
 
 ### Search all books — expected 200 with passages and context
@@ -27,7 +27,7 @@ POST {{baseUrl}}/api/search
 Content-Type: application/json
 
 {
-  "query": "How do plants turn sunlight into chemical energy?",
+  "query": "How do I make chicken adobo?",
   "topK": 5
 }
 
@@ -36,7 +36,7 @@ POST {{baseUrl}}/api/search
 Content-Type: application/json
 
 {
-  "query": "What is the role of mitochondria?",
+  "query": "How do I prepare pork barbeque?",
   "topK": 5,
   "bookId": "{{bookId}}"
 }
@@ -54,7 +54,7 @@ POST {{baseUrl}}/api/search
 Content-Type: application/json
 
 {
-  "query": "How does photosynthesis work?",
+  "query": "How do I make chicken adobo?",
   "topK": 21
 }
 
@@ -63,7 +63,7 @@ POST {{baseUrl}}/api/search
 Content-Type: application/json
 
 {
-  "query": "How does photosynthesis work?",
+  "query": "How do I make chicken adobo?",
   "bookId": "invalid"
 }
 
