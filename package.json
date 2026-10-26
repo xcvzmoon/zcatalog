@@ -16,7 +16,15 @@
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "test:verbose": "vitest --watch=false --reporter=verbose",
-    "release": "genbumppush --yes"
+    "release": "genbumppush --yes",
+    "docker:build": "docker compose build",
+    "docker:test": "RUN_DOCKER_TEST=1 vitest run tests/docker.test.ts",
+    "docker:up": "docker compose up --detach --build --wait",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs --follow api",
+    "docker:ps": "docker compose ps",
+    "docker:restart": "docker compose restart api",
+    "docker:config": "docker compose config --quiet"
   },
   "dependencies": {
     "@huggingface/transformers": "^4.3.1",
