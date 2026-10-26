@@ -1,0 +1,25 @@
+services:
+  api:
+    build: .
+    image: zcatalog:production
+    init: true
+    restart: unless-stopped
+    logging:
+      driver: local
+      options:
+        max-size: '10m'
+        max-file: '3'
+    ports:
+      - '127.0.0.1:${PORT:-3000}:3000'
+    volumes:
+      - data:/app/.data
+      - models:/app/.output/server/node_modules/@huggingface/transformers/.cache
+    stop_grace_period: 35s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  data:
+  models:
