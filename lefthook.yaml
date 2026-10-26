@@ -1,0 +1,24 @@
+glob_matcher: doublestar
+
+pre-commit:
+  piped: true
+  jobs:
+    - name: format
+      glob: '**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,json,jsonc,json5,yaml,yml,toml,html,vue,svelte,css,scss,less,md,mdx,graphql,gql}'
+      run: pnpm exec oxfmt --check --no-error-on-unmatched-pattern {staged_files}
+
+    - name: lint
+      glob: '**/*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,vue}'
+      run: pnpm exec oxlint --no-error-on-unmatched-pattern {staged_files}
+
+pre-push:
+  piped: true
+  jobs:
+    - name: check
+      run: pnpm check
+
+    - name: test
+      run: pnpm test:verbose
+
+    - name: build
+      run: pnpm build
