@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  create-release:
+    name: Create release
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Setup project
+        uses: ./.github/actions/setup-project
+
+      - name: Verify release version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          package_version=$(node -p "require('./package.json').version")
+          if [ "$RELEASE_TAG" != "v$package_version" ]; then
+            echo "Release tag $RELEASE_TAG does not match package version v$package_version." >&2
+            exit 1
+          fi
+
+      - name: Check and build
+        run: |
+          pnpm check
+          pnpm build
+
+      - name: Create or sync release
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          GENBUMPPUSH_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm exec genbumppush --retry-github "$RELEASE_TAG" --yes
