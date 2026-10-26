@@ -6,6 +6,10 @@ import packageJson from './package.json' with { type: 'json' };
 export default defineConfig({
   compatibilityDate: '2026-10-26',
   serverDir: './server',
+  rolldownConfig: {
+    external: ['@zvec/zvec', '@huggingface/transformers', 'pdfjs-dist/legacy/build/pdf.mjs'],
+  },
+  traceDeps: ['@zvec/zvec*', '@huggingface/transformers*', 'pdfjs-dist*', '@napi-rs/canvas*'],
   experimental: {
     openAPI: true,
   },

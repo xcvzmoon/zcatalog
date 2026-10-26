@@ -1,2 +1,5 @@
 allowBuilds:
+  '@zvec/zvec': true
   lefthook: true
+  onnxruntime-node: true
+  protobufjs: true
