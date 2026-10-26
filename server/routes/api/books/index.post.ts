@@ -1,3 +1,4 @@
+import { useLogger } from 'evlog/nitro/v3';
 import { defineHandler, defineRouteMeta } from 'nitro';
 import { assertBodySize, HTTPError } from 'nitro/h3';
 import * as v from 'valibot';
@@ -101,6 +102,13 @@ defineRouteMeta({
 const titleSchema = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(300));
 
 export default defineHandler(async (event) => {
+  const log = useLogger(event);
+
+  log.set({
+    action: 'books.ingest',
+    stage: 'validate',
+  });
+
   assertBodySize(event, 250 * 1024 * 1024);
 
   const formData = await new Response(event.req.body, {
@@ -131,6 +139,8 @@ export default defineHandler(async (event) => {
     });
   }
 
+  log.set({ upload: { bytes: file.size } });
+
   const arrayBuffer = await file.arrayBuffer();
   const byteArray = new Uint8Array(arrayBuffer);
   const decodedData = new TextDecoder().decode(byteArray.subarray(0, 5));
@@ -143,8 +153,19 @@ export default defineHandler(async (event) => {
   }
 
   const bookStore = useBookStore().get();
-  const book = await ingestBook(bookStore, byteArray, parsedTitle.output);
-  event.res.status = 201;
+  log.set({ stage: 'ingest' });
 
+  const book = await ingestBook(bookStore, byteArray, parsedTitle.output);
+  log.set({
+    stage: 'complete',
+    outcome: 'success',
+    book: {
+      id: book.bookId,
+      pages: book.pages,
+      chunks: book.chunks,
+    },
+  });
+
+  event.res.status = 201;
   return book;
 });

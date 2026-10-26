@@ -1,3 +1,4 @@
+import { useLogger } from 'evlog/nitro/v3';
 import { defineHandler, defineRouteMeta } from 'nitro';
 import { assertBodySize, HTTPError, readBody } from 'nitro/h3';
 import * as v from 'valibot';
@@ -100,6 +101,13 @@ const searchSchema = v.object({
 });
 
 export default defineHandler(async (event) => {
+  const log = useLogger(event);
+
+  log.set({
+    action: 'books.search',
+    stage: 'validate',
+  });
+
   assertBodySize(event, 16 * 1024);
 
   const body: unknown = await readBody(event);
@@ -113,6 +121,28 @@ export default defineHandler(async (event) => {
   }
 
   const { query, topK, bookId } = result.output;
+
+  log.set({
+    stage: 'search',
+    search: {
+      queryCharacters: query.length,
+      topK,
+      hasBookFilter: Boolean(bookId),
+    },
+  });
+
+  if (bookId) {
+    log.set({ book: { id: bookId } });
+  }
+
   const bookStore = useBookStore().get();
-  return searchBooks(bookStore, query, topK, bookId);
+  const results = await searchBooks(bookStore, query, topK, bookId);
+
+  log.set({
+    stage: 'complete',
+    outcome: 'success',
+    search: { resultCount: results.passages.length },
+  });
+
+  return results;
 });
