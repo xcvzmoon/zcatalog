@@ -287,6 +287,44 @@ pnpm start
 
 ## Deployment and operations
 
+### Docker
+
+Install Docker with Compose v2 and start its daemon, then run:
+
+```bash
+pnpm docker:up
+curl --fail-with-body http://localhost:3000/api
+```
+
+The multi-stage image builds Linux native dependencies inside Docker with the pinned Node.js and pnpm versions. Before copying Nitro's production output into the runtime, it removes ONNX binaries for other CPU architectures and the unused standalone ONNX browser runtime package. Transformers.js bundles its browser adapter and uses native ONNX for this service's CPU inference. The runtime runs as the `node` user. The health check confirms HTTP availability; it does not load the embedding model or check the collection.
+
+Compose binds the API to localhost on port 3000. Use `PORT=3001 pnpm docker:up` to change the host port. Put a reverse proxy in front of the API for remote access and TLS. Run one container per collection; do not scale this service against the same volume.
+
+| Command               | Purpose                                                                         |
+| --------------------- | ------------------------------------------------------------------------------- |
+| `pnpm docker:build`   | Build the production image.                                                     |
+| `pnpm docker:test`    | Test API metadata, PDF ingestion, and semantic search in an isolated container. |
+| `pnpm docker:up`      | Build, start in the background, and wait for health.                            |
+| `pnpm docker:down`    | Remove containers and network, preserving volumes.                              |
+| `pnpm docker:logs`    | Follow API logs.                                                                |
+| `pnpm docker:ps`      | Show service status.                                                            |
+| `pnpm docker:restart` | Restart the existing container without rebuilding.                              |
+| `pnpm docker:config`  | Validate the Compose configuration.                                             |
+
+The `data` volume stores the Zvec collection. The `models` volume persists Transformers.js's default model cache. Both survive container rebuilds and `docker:down`. The first upload or search still needs outbound access to Hugging Face. `docker compose down --volumes` permanently deletes both volumes, including indexed documents. Stop the service before backing up the data volume.
+
+Compose allows 35 seconds for shutdown so Nitro can finish its default 30-second graceful shutdown window. Source edits require `pnpm docker:up` to rebuild and recreate the container.
+
+Container logs rotate at 10 MB per file with at most three files, using Docker's `local` logging driver. The image smoke test requires a running Docker daemon and outbound Hugging Face access. Run `pnpm docker:build` followed by `pnpm docker:test`; the test creates an isolated container with an empty collection and model cache, then removes that container in its cleanup step. It does not use the Compose data volumes.
+
+### Release validation
+
+`pnpm release` runs checks and unit tests before genbumppush bumps the version and pushes the release commit and tag. The GitHub Actions release workflow checks out the event's exact commit, verifies that the tag matches the package version, runs checks and unit tests, and builds the application with `pnpm build`.
+
+Docker builds and smoke tests run locally with `pnpm docker:build` and `pnpm docker:test`. Local builds use the builder's architecture. CI does not run Docker operations or publish images.
+
+Preview version changes with `pnpm release --dry-run`. To retry release validation, rerun the Release workflow for the original tag event. The rerun checks out the original event commit and rebuilds and tests it. Preserve published Git tags instead of moving them.
+
 ### Files and persistence
 
 - `.data/books-minilm-l6-v2` contains the collection relative to the process's working directory. Start from a consistent directory and mount persistent writable storage there.
