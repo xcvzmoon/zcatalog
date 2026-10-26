@@ -19,7 +19,13 @@
     "release": "genbumppush --yes"
   },
   "dependencies": {
-    "evlog": "^2.33.1"
+    "@huggingface/transformers": "^4.3.1",
+    "@napi-rs/canvas": "^1.0.13",
+    "@zvec/zvec": "0.7.1",
+    "evlog": "^2.33.1",
+    "pdfjs-dist": "^6.4.299",
+    "uuid": "14.0.3",
+    "valibot": "^1.5.0"
   },
   "devDependencies": {
     "@oxlint/plugins": "1.89.0",

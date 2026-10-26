@@ -1,0 +1,110 @@
+@baseUrl = http://localhost:3000
+@bookId = {{uploadBook.response.body.$.bookId}}
+
+### API health — expected 200
+GET {{baseUrl}}/api
+Accept: application/json
+
+### Upload AI document extraction article — expected 201; run before the filtered search
+# @name uploadBook
+POST {{baseUrl}}/api/books
+Content-Type: multipart/form-data; boundary=BookUploadBoundary
+Accept: application/json
+
+--BookUploadBoundary
+Content-Disposition: form-data; name="title"
+
+Evaluating the quality of AI document data extraction with small and large language models
+--BookUploadBoundary
+Content-Disposition: form-data; name="file"; filename="ai-document-extraction.pdf"
+Content-Type: application/pdf
+
+< ../../public/assets/Evaluating the quality of AI document data extraction with small and large language models.pdf
+--BookUploadBoundary--
+
+### Search all books — expected 200 with passages and context
+POST {{baseUrl}}/api/search
+Content-Type: application/json
+
+{
+  "query": "How is extraction accuracy measured against a source of truth?",
+  "topK": 5
+}
+
+### Search the uploaded book — expected 200; uses uploadBook's response
+POST {{baseUrl}}/api/search
+Content-Type: application/json
+
+{
+  "query": "What factors affect the speed and cost of document extraction?",
+  "topK": 5,
+  "bookId": "{{bookId}}"
+}
+
+### Empty query — expected 400 SEARCH_REQUEST_INVALID
+POST {{baseUrl}}/api/search
+Content-Type: application/json
+
+{
+  "query": ""
+}
+
+### Excessive result count — expected 400 SEARCH_REQUEST_INVALID
+POST {{baseUrl}}/api/search
+Content-Type: application/json
+
+{
+  "query": "How is extraction accuracy measured against a source of truth?",
+  "topK": 21
+}
+
+### Invalid book UUID — expected 400 SEARCH_REQUEST_INVALID
+POST {{baseUrl}}/api/search
+Content-Type: application/json
+
+{
+  "query": "How is extraction accuracy measured against a source of truth?",
+  "bookId": "invalid"
+}
+
+### Malformed JSON — expected 400
+POST {{baseUrl}}/api/search
+Content-Type: application/json
+
+{"query":
+
+### Missing upload file — expected 400 PDF_FILE_REQUIRED
+POST {{baseUrl}}/api/books
+Content-Type: multipart/form-data; boundary=MissingFileBoundary
+
+--MissingFileBoundary
+Content-Disposition: form-data; name="title"
+
+Missing file
+--MissingFileBoundary--
+
+### Missing upload title — expected 400 PDF_TITLE_REQUIRED
+POST {{baseUrl}}/api/books
+Content-Type: multipart/form-data; boundary=MissingTitleBoundary
+
+--MissingTitleBoundary
+Content-Disposition: form-data; name="file"; filename="invalid.pdf"
+Content-Type: application/pdf
+
+not a PDF
+--MissingTitleBoundary--
+
+### Invalid PDF — expected 400 PDF_FILE_INVALID
+POST {{baseUrl}}/api/books
+Content-Type: multipart/form-data; boundary=InvalidPdfBoundary
+
+--InvalidPdfBoundary
+Content-Disposition: form-data; name="title"
+
+Invalid PDF
+--InvalidPdfBoundary
+Content-Disposition: form-data; name="file"; filename="invalid.pdf"
+Content-Type: application/pdf
+
+not a PDF
+--InvalidPdfBoundary--

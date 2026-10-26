@@ -267,6 +267,12 @@
       "sourceType": "github",
       "skillPath": ".agents/skills/worktree/SKILL.md",
       "computedHash": "e0f76c1a6808fb416ec1e993e6b528eaf574877ddb3e483a35a5d0a882dd9897"
+    },
+    "zvec": {
+      "source": "zvec-ai/zvec-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/zvec/SKILL.md",
+      "computedHash": "5c4cdd4c96bd343b37ef530ea128b1e0d8e5f45f19aac40827d599c2b1bfd221"
     }
   }
 }
