@@ -10,13 +10,13 @@ import { chunkTokens, extractPages } from '~/server/utils/pdf.ts';
 
 const bookStore = useBookStore();
 
-const cookbookPdfUrl = new URL(
-  '../public/assets/Quick and Easy Filipino Cookbook - Quick and easy to prepare at home recipes, step by step guide to the classic Filipino… (Scott Wilson).pdf',
+const documentPdfUrl = new URL(
+  '../public/assets/Evaluating the quality of AI document data extraction with small and large language models.pdf',
   import.meta.url,
 );
 
-async function readCookbookPdf(): Promise<Uint8Array> {
-  return new Uint8Array(await readFile(cookbookPdfUrl));
+async function readDocumentPdf(): Promise<Uint8Array> {
+  return new Uint8Array(await readFile(documentPdfUrl));
 }
 
 test('token windows preserve the tail, overlap, and model input budget', () => {
@@ -110,45 +110,44 @@ test('invalid PDFs fail extraction', async () => {
   await expect(extractPages(new TextEncoder().encode('not a PDF'))).rejects.toThrow();
 });
 
-test('cookbook PDF extraction preserves physical page numbers including blank covers', async () => {
-  const pages = await extractPages(await readCookbookPdf());
-  expect(pages).toHaveLength(42);
-  expect(pages[0]).toEqual({
-    page: 1,
-    text: '',
-  });
-  expect(pages[1]).toEqual({
-    page: 2,
-    text: '',
-  });
+test('article PDF extraction preserves physical page numbers and content', async () => {
+  const pages = await extractPages(await readDocumentPdf());
+  expect(pages).toHaveLength(7);
+  expect(pages[0]?.page).toBe(1);
+  expect(pages[0]?.text).toContain('Evaluating the quality of AI document data extraction');
   expect(pages[2]?.page).toBe(3);
-  expect(pages[2]?.text).toContain('COPYRIGHT');
-  expect(pages[3]?.text).toContain('CONTENTS');
+  expect(pages[2]?.text).toContain('Evaluation Methodology');
   expect(pages.every(({ page }, index) => page === index + 1)).toBe(true);
 }, 30_000);
 
 test.skipIf(process.env.RUN_SEMANTIC_TEST !== '1')(
-  'local embeddings retrieve cited recipe passages from the complete cookbook',
+  'local embeddings retrieve cited evaluation methodology from the complete article',
   async () => {
     const directory = mkdtempSync(join(tmpdir(), 'zcatalog-semantic-'));
     const store = bookStore.open(join(directory, 'books'));
 
     try {
-      const title = 'Quick and Easy Filipino Cookbook';
-      const book = await ingestBook(store, await readCookbookPdf(), title);
-      const repeated = await ingestBook(store, await readCookbookPdf(), title);
+      const title =
+        'Evaluating the quality of AI document data extraction with small and large language models';
+      const book = await ingestBook(store, await readDocumentPdf(), title);
+      const repeated = await ingestBook(store, await readDocumentPdf(), title);
       expect(uuidVersion(book.bookId)).toBe(7);
       expect(uuidVersion(repeated.bookId)).toBe(7);
       expect(repeated.bookId).not.toBe(book.bookId);
       expect(repeated.pages).toBe(book.pages);
       expect(repeated.chunks).toBe(book.chunks);
-      expect(book.pages).toBe(42);
-      expect(book.chunks).toBeGreaterThan(42);
+      expect(book.pages).toBe(7);
+      expect(book.chunks).toBeGreaterThan(7);
 
-      const results = await searchBooks(store, 'How do I make chicken adobo?', 5, book.bookId);
+      const results = await searchBooks(
+        store,
+        'How is extraction accuracy measured against a source of truth?',
+        5,
+        book.bookId,
+      );
       expect(results.passages).toHaveLength(5);
       expect(results.passages.every(({ bookId }) => bookId === book.bookId)).toBe(true);
-      expect(results.passages.some(({ page }) => page === 11 || page === 12)).toBe(true);
+      expect(results.passages.some(({ page }) => page === 3)).toBe(true);
       expect(results.context).toContain(`[1] ${title}, PDF page ${results.passages[0]?.page}`);
     } finally {
       store.closeSync();
